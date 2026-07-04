@@ -60,7 +60,8 @@ else
     hytale-downloader
 fi
 
-ZIP_FILE=$(ls "$BASE_DIR"/[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]*.zip 2>/dev/null | head -n 1)
+# Find the most recently downloaded ZIP file in $BASE_DIR and assign its path to ZIP_FILE
+ZIP_FILE=$(ls "$BASE_DIR"/*.zip 2>/dev/null | head -n 1)
 
 if [ -z "$ZIP_FILE" ]; then
     log_error "Download failed." "Could not find valid YYYY.MM.DD*.zip after download."
