@@ -1,13 +1,13 @@
 name: "Release: Tag ➔ Docker Hub & GitHub"
 
-# Description: Automated CI/CD pipeline triggered by version tags (v*.*.*).
+# Description: Automated CI/CD pipeline triggered by clean version tags (*.*.*).
 # 1. Builds and publishes multi-flavor Docker images simultaneously to both GHCR and Docker Hub.
 # 2. Automatically compiles a markdown changelog, filters contributors, and deploys a formal GitHub Release.
 
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - '*.*.*'
   workflow_dispatch:
 
 permissions:
@@ -55,8 +55,7 @@ jobs:
         id: get_version
         run: |
           raw_tag="${GITHUB_REF#refs/tags/}"
-          version="${raw_tag#v}"
-          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "version=$raw_tag" >> $GITHUB_OUTPUT
 
       - name: Set tag prefix
         id: set_tag
@@ -140,7 +139,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           body: |
             ## Changes since ${{ steps.previoustag.outputs.previous_tag }}
             
