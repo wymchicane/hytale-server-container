@@ -67,11 +67,17 @@ extract_and_stage_server() {
 # Main logic - update existing installation
 log_warning "Update package detected." "Applying server update..."
 
-# Check for update package
-ZIP_FILE=$(ls "$BASE_DIR"/[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]*.zip 2>/dev/null | head -n 1)
+# Searches for the zip file
+ZIP_FILE=""
+for f in "$BASE_DIR"/*.zip; do
+    if [ -e "$f" ]; then
+        ZIP_FILE="$f"
+        break # Found the first zip, stop looking
+    fi
+done
 
 if [ -z "$ZIP_FILE" ]; then
-    log_error "No update package found." "Expected YYYY.MM.DD*.zip in $BASE_DIR"
+    log_error "No update package found." "Expected *.zip in $BASE_DIR"
     exit 1
 fi
 

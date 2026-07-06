@@ -6,7 +6,7 @@ set -eu
 
 # --- Legacy Path Migration ---
 # Moves /home/container/game/* -> /home/container/ when game/Server exists with files
-log_section "Migrate Check"
+log_section "Scanning for legacy folder structure"
 
 LEGACY_ROOT="/home/container/game"
 LEGACY_SERVER_DIR="$LEGACY_ROOT/Server"
@@ -15,7 +15,7 @@ TARGET_ROOT="/home/container"
 # Only run if game/Server exists and contains at least one file
 if [ ! -d "$LEGACY_SERVER_DIR" ] || [ -z "$(ls -A "$LEGACY_SERVER_DIR" 2>/dev/null)" ]; then
     log_step "Legacy /game/Server path"
-    printf "${DIM}not found or empty (skip)${NC}\n"
+    printf "${DIM}Not found or empty (skip)${NC}\n"
     exit 0
 fi
 

@@ -4,21 +4,28 @@ set -eu
 # Load dependencies
 . "$SCRIPTS_PATH/utils.sh"
 
-log_section "Hytale Binary Handler"
-log_step "Hytale Server Binary Check"
+log_section "Hytale core initialization"
+log_step "Evaluating installation status"
 
-# Check for existing update package first (manual download or update)
-ZIP_FILE=$(ls "$BASE_DIR"/[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]*.zip 2>/dev/null | head -n 1)
+# Searches for the zip file
+ZIP_FILE=""
+for f in "$BASE_DIR"/*.zip; do
+    if [ -e "$f" ]; then
+        ZIP_FILE="$f"
+        break # Found the first zip, stop looking
+    fi
+done
 
+# Decision Logic
 if [ -n "$ZIP_FILE" ]; then
-    # Update available - run update script
-    sh "$SCRIPTS_PATH/hytale/hytale_update.sh"
+    log_success "Update package detected" "Running update script..."
+    exec sh "$SCRIPTS_PATH/hytale/hytale_update.sh"
+
 elif [ ! -f "$SERVER_JAR_PATH" ]; then
-    # No jar and no zip - run fresh download script
-    sh "$SCRIPTS_PATH/hytale/hytale_download.sh"
+    log_success "No installation found" "Running fresh download..."
+    exec sh "$SCRIPTS_PATH/hytale/hytale_download.sh"
+
 else
-    # Server already installed, no updates
-    log_success
-    printf "      ${DIM}↳ Info:${NC} Server up-to-date. Skipping extraction.\n"
-    printf "      ${DIM}↳ Note:${NC} Place YYYY.MM.DD*.zip in %s to trigger update.\n" "$BASE_DIR"
+    # Server is already installed and no update zip exists
+    log_success "Server up-to-date" "Skipping extraction. Place *.zip in $BASE_DIR to trigger an update."
 fi
