@@ -1,5 +1,6 @@
 #!/bin/sh
-set -eu
+# Note: Do NOT use set -eu here — the background monitoring subshell must not exit on non-zero returns
+# (e.g., grep no-match returns 1, file-not-yet-available returns 2)
 
 # Preload auth commands into the server console after the server signals readiness
 # Skip auto-auth if credentials are already persisted AND hardware ID matches
@@ -43,33 +44,50 @@ if [ "$RUN_AUTO_AUTH" = "TRUE" ]; then
         # Wait for the server to start creating the log file
         sleep 5
         
-        # Target the new log directory and grab the most recent *_server.log file
-        LOG_FILE=$(ls -t /home/container/Server/logs/*_server.log 2>/dev/null | head -n 1)
+        # Poll for the log directory and most recent *_server.log file
+        LOG_FILE=""
+        for i in $(seq 1 30); do
+            for f in /home/container/Server/logs/*_server.log; do
+                if [ -f "$f" ]; then
+                    LOG_FILE="$f"
+                    break 2
+                fi
+            done
+            sleep 2
+        done
         
-        if [ -n "${LOG_FILE:-}" ]; then
-            stdbuf -oL tail -f "$LOG_FILE" | while read -r line; do
+        if [ -n "$LOG_FILE" ] && [ -f "$LOG_FILE" ]; then
+            # Use tail -F (capital F) to follow by name and handle log rotation/creation
+            # Run tail in a way that ensures line buffering across all platforms
+            tail -F "$LOG_FILE" 2>/dev/null | while IFS= read -r line || [ -n "$line" ]; do
                 
                 # 1. Look for the boot confirmation to send the login command
-                if echo "$line" | grep -q "Hytale Server Booted!"; then
-                    sleep 2
-                    echo "/auth login device" > "$AUTH_PIPE"
-                    printf "[%s] ✔ Sent auth command to server\n" "$(date '+%H:%M:%S')" >> /tmp/hytale_auth.log
-                fi
+                case "$line" in
+                    *"Hytale Server Booted!"*)
+                        sleep 2
+                        echo "/auth login device" > "$AUTH_PIPE" 2>/dev/null || true
+                        printf "[%s] ✔ Sent auth command to server\n" "$(date '+%H:%M:%S')" >> /tmp/hytale_auth.log 2>/dev/null || true
+                        ;;
+                esac
 
                 # 2. Handle profile selection if prompted
-                if echo "$line" | grep -q "Multiple profiles available"; then
-                    sleep 1
-                    echo "/auth select $AUTH_SELECT_PROFILE" > "$AUTH_PIPE"
-                    printf "[%s] ✔ Selected profile %s\n" "$(date '+%H:%M:%S')" "$AUTH_SELECT_PROFILE" >> /tmp/hytale_auth.log
-                fi
+                case "$line" in
+                    *"Multiple profiles available"*)
+                        sleep 1
+                        echo "/auth select $AUTH_SELECT_PROFILE" > "$AUTH_PIPE" 2>/dev/null || true
+                        printf "[%s] ✔ Selected profile %s\n" "$(date '+%H:%M:%S')" "$AUTH_SELECT_PROFILE" >> /tmp/hytale_auth.log 2>/dev/null || true
+                        ;;
+                esac
 
                 # 3. Check for successful auth, set persistence, and exit the loop
-                if echo "$line" | grep -qE "Authentication successful!|Server is already authenticated."; then
-                    sleep 1
-                    echo "/auth persistence Encrypted" > "$AUTH_PIPE"
-                    printf "[%s] ✔ Sent persistence command to server\n" "$(date '+%H:%M:%S')" >> /tmp/hytale_auth.log
-                    break # Stops the tail process since auth is complete
-                fi
+                case "$line" in
+                    *"Authentication successful!"*|*"Server is already authenticated."*)
+                        sleep 1
+                        echo "/auth persistence Encrypted" > "$AUTH_PIPE" 2>/dev/null || true
+                        printf "[%s] ✔ Sent persistence command to server\n" "$(date '+%H:%M:%S')" >> /tmp/hytale_auth.log 2>/dev/null || true
+                        break # Stops the tail process since auth is complete
+                        ;;
+                esac
                 
             done
         fi

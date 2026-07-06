@@ -1,5 +1,8 @@
 #!/bin/sh
-set -eu
+
+# Note: set -eu removed — pipe components and FIFO operations return non-zero
+# during normal lifecycle (e.g., FIFO read EOF, broken pipes). Using explicit
+# error handling where needed instead.
 
 # Load dependencies
 . "$SCRIPTS_PATH/utils.sh"
@@ -33,8 +36,12 @@ while true; do
     # Track start time for crash detection
     START_TIME=$(date +%s)
 
-    # Launch Java server process with all configured options
-    $RUNTIME sh -c "( tail -f \"$AUTH_PIPE\" & cat ) | stdbuf -oL -eL java $JAVA_ARGS \
+    # Launch Java server process with all configured options.
+    # Pipe chain: tail reads /auth commands from FIFO -> java stdin
+    #            java stderr -> sed strips \r -> tee writes to log + stdout
+    
+    # Build the java command
+    JAVA_BIN="stdbuf -oL -eL java $JAVA_ARGS \
         $HYTALE_CACHE_OPT \
         $HYTALE_CACHE_LOG_OPT \
         -Duser.timezone=\"$TZ\" \
@@ -79,7 +86,19 @@ while true; do
         $HYTALE_VERSION_OPT \
         $HYTALE_WORLD_GEN_OPT \
         --assets \"$GAME_DIR/Assets.zip\" \
-        --bind \"$SERVER_IP:$SERVER_PORT\" 2>&1 | stdbuf -oL -eL sed 's/\r$//' | stdbuf -oL -eL tee \"$AUTH_OUTPUT_LOG\""
+        --bind \"$SERVER_IP:$SERVER_PORT\""
+
+    # Execute with FIFO input piped into java stdin, and stderr through sed to tee.
+    # The subshell "( tail -f ... & cat )" feeds console commands from FIFO + any stdin.
+    # We use a named pipe approach: tail output becomes java's stdin via pipe.
+    # Java stdout/stderr goes through sed (CRLF strip) then tee (log capture).
+
+    RUNTIME_CMD="${RUNTIME:-}"
+    if [ -n "$RUNTIME_CMD" ]; then
+        $RUNTIME sh -c "( tail -f \"$AUTH_PIPE\" 2>/dev/null || true ) | $JAVA_BIN 2>&1 | stdbuf -oL -eL sed 's/\r$//' | stdbuf -oL -eL tee \"$AUTH_OUTPUT_LOG\""
+    else
+        ( tail -f "$AUTH_PIPE" 2>/dev/null || true ) | $JAVA_BIN 2>&1 | stdbuf -oL -eL sed 's/\r$//' | stdbuf -oL -eL tee "$AUTH_OUTPUT_LOG"
+    fi
     
     EXIT_CODE=$?
     ELAPSED=$(($(date +%s) - START_TIME))
