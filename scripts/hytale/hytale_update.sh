@@ -9,18 +9,18 @@ set -eu
 # ==========================================
 
 extract_and_stage_server() {
-    local zip_file="$1"
+    local ZIP_FILE="$1"
 
     log_step "Extracting to staging area"
     mkdir -p "$GAME_DIR/updater/staging"
 
     if [ "${DEBUG:-FALSE}" = "TRUE" ]; then
-        printf "      ${DIM}↳ Source:${NC} %s\n" "$(basename "$zip_file")"
+        printf "      ${DIM}↳ Source:${NC} %s\n" "$(basename "$ZIP_FILE")"
         printf "      ${DIM}↳ Target:${NC} ${GREEN}%s${NC}\n" "$BASE_DIR"
     fi
 
     # Overwrites only archived files; user data/configs/mods untouched
-    if 7z x "$zip_file" -aoa -bsp1 -mmt=on -o"$BASE_DIR" >/dev/null 2>&1; then
+    if 7z x "$ZIP_FILE" -aoa -bsp1 -mmt=on -o"$BASE_DIR" >/dev/null 2>&1; then
         log_success
     else
         log_error "Extraction failed" "Check disk space or 7z compatibility."
@@ -45,7 +45,7 @@ extract_and_stage_server() {
 
     # Cleanup and permissions
     log_step "Cleaning up"
-    rm -f "$zip_file"
+    rm -f "$ZIP_FILE"
     rm -rf updater/staging
     chown -R container:container "$BASE_DIR" 2>/dev/null || true
     chmod -R 755 "$BASE_DIR" && log_success || log_warning "Chmod failed" "May need manual adjustment."
@@ -58,9 +58,15 @@ extract_and_stage_server() {
 log_section "Hytale Server Update"
 log_warning "Update package detected." "Applying server update..."
 
+# Locate the downloaded ZIP file
 ZIP_FILE=""
 for f in "$BASE_DIR"/*.zip; do
-    if [ -e "$f" ]; then
+    # Get just the filename
+    filename=$(basename "$f")
+
+    # Skip Assets.zip and only accept files matching semantic versioning
+    # This pattern matches files like 0.5.6.zip, 1.0.0.zip, etc.
+    if [[ "$filename" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.zip$ ]]; then
         ZIP_FILE="$f"
         break
     fi

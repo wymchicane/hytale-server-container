@@ -9,14 +9,14 @@ set -eu
 # ==========================================
 
 extract_server() {
-    local zip_file="$1"
+    local ZIP_FILE="$1"
 
     if [ "${DEBUG:-FALSE}" = "TRUE" ]; then
-        printf "      ${DIM}↳ Source:${NC} %s\n" "$(basename "$zip_file")"
+        printf "      ${DIM}↳ Source:${NC} %s\n" "$(basename "$ZIP_FILE")"
         printf "      ${DIM}↳ Target:${NC} %s\n" "$BASE_DIR"
     fi
 
-    if unzip -qo "$zip_file" -d "$BASE_DIR"; then
+    if unzip -qo "$ZIP_FILE" -d "$BASE_DIR"; then
         log_success
     else
         log_error "Extraction failed" "Check disk space or zip file integrity."
@@ -25,7 +25,7 @@ extract_server() {
 
     # Remove downloaded zip
     log_step "Post-extraction cleanup"
-    rm -f "$zip_file"
+    rm -f "$ZIP_FILE"
     log_success
 
     # Set ownership and permissions
@@ -60,7 +60,12 @@ run_downloader
 # Locate the downloaded ZIP file
 ZIP_FILE=""
 for f in "$BASE_DIR"/*.zip; do
-    if [ -e "$f" ]; then
+    # Get just the filename
+    filename=$(basename "$f")
+
+    # Skip Assets.zip and only accept files matching semantic versioning
+    # This pattern matches files like 0.5.6.zip, 1.0.0.zip, etc.
+    if [[ "$filename" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.zip$ ]]; then
         ZIP_FILE="$f"
         break
     fi

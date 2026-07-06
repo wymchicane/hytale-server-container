@@ -9,17 +9,22 @@ set -eu
 # ==========================================
 
 determine_install_state() {
-    # Search for staged update zip
-    zip_file=""
+    # Locate the downloaded ZIP file
+    ZIP_FILE=""
     for f in "$BASE_DIR"/*.zip; do
-        if [ -e "$f" ]; then
-            zip_file="$f"
+        # Get just the filename
+        filename=$(basename "$f")
+
+        # Skip Assets.zip and only accept files matching semantic versioning
+        # This pattern matches files like 0.5.6.zip, 1.0.0.zip, etc.
+        if [[ "$filename" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.zip$ ]]; then
+            ZIP_FILE="$f"
             break
         fi
     done
 
     # Decision logic based on detection
-    if [ -n "$zip_file" ]; then
+    if [ -n "$ZIP_FILE" ]; then
         log_success "Update package detected" "Running update script..."
         exec sh "$SCRIPTS_PATH/hytale/hytale_update.sh"
     elif [ ! -f "$SERVER_JAR_PATH" ]; then
