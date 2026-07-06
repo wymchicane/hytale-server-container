@@ -2,7 +2,7 @@
 
 # STAGE 1: Builder
 FROM alpine:3.23 AS builder
-RUN apk add --no-cache curl 7zip dos2unix
+RUN apk add --no-cache curl unzip 7zip dos2unix
 
 WORKDIR /build
 
