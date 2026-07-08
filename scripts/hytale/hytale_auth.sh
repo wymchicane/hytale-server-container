@@ -64,7 +64,7 @@ check_hardware_id() {
         if [ -f "$BASE_DIR/auth.enc" ]; then
             log_step "Credential Persistence"
             printf "${GREEN}enabled (auth.enc file found)${NC}\n"
-            RUN_AUTO_AUTH="FALSE"WWW
+            RUN_AUTO_AUTH="FALSE"
         else
             log_step "Credential Persistence"
             printf "${YELLOW}not configured${NC}\n"

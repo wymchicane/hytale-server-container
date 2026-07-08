@@ -31,6 +31,18 @@ if [ "$(id -u)" = "0" ]; then
     chown -R container:container /home/container
 fi
 
+# Generate /etc/machine-id if missing (Docker containers lack this by default)
+if [ ! -f "/etc/machine-id" ] || [ ! -s "/etc/machine-id" ]; then
+    if command -v uuidgen >/dev/null 2>&1; then
+        uuidgen > /etc/machine-id
+    elif [ -f "/proc/sys/kernel/random/uuid" ]; then
+        cat /proc/sys/kernel/random/uuid > /etc/machine-id
+    else
+        # Fallback: deterministic ID from hostname + salt
+        printf '%s' "${HOSTNAME:-hytale-server}-machine-id" | sha256sum | cut -d' ' -f1 > /etc/machine-id
+    fi
+fi
+
 # Load all environment variables and configuration defaults
 . "$SCRIPTS_PATH/environment.sh"
 
