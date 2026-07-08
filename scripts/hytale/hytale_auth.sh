@@ -15,22 +15,49 @@ init_auth_pipes() {
     export AUTH_OUTPUT_LOG
 }
 
+generate_hardware_id() {
+    HARDWARE_ID_FILE="$BASE_DIR/.hardware-id"
+
+    if [ ! -f "$HARDWARE_ID_FILE" ]; then
+        # Generate deterministic ID from container name + static salt
+        CONTAINER_NAME="${HOSTNAME:-hytale-server}"
+        SALT="hytale-server-container-hardware-id-v1"
+        printf '%s-%s' "$CONTAINER_NAME" "$SALT" | sha256sum | cut -d' ' -f1 > "$HARDWARE_ID_FILE"
+    fi
+
+    HARDWARE_ID="$(cat "$HARDWARE_ID_FILE")"
+}
+
 check_hardware_id() {
     log_step "Hardware ID"
-    if [ ! -f "/etc/machine-id" ]; then
-        log_warning "Hardware ID not found" "Mount /etc/machine-id:/etc/machine-id:ro to enable encrypted credential persistence"
-        printf "    ${DIM}↳ Info:${NC} Auto-auth will run on every startup without it\n"
-    elif [ ! -s "/etc/machine-id" ]; then
-        log_warning "Hardware ID file is empty" "Ensure /etc/machine-id contains a valid machine identifier"
-    elif [ -f "$BASE_DIR/auth.enc" ]; then
+
+    if [ -f "/etc/machine-id" ] && [ -s "/etc/machine-id" ]; then
+        HARDWARE_ID="$(cat /etc/machine-id)"
+        printf "${GREEN}${HARDWARE_ID}${NC}\n"
         log_success
-        log_step "Credential Persistence"
-        printf "${GREEN}enabled (auth.enc file found)${NC}\n"
-        RUN_AUTO_AUTH="FALSE"
+
+        if [ -f "$BASE_DIR/auth.enc" ]; then
+            log_step "Credential Persistence"
+            printf "${GREEN}enabled (auth.enc file found)${NC}\n"
+            RUN_AUTO_AUTH="FALSE"
+        else
+            log_step "Credential Persistence"
+            printf "${YELLOW}not configured${NC}\n"
+        fi
     else
+        generate_hardware_id
+        printf "${CYAN}${HARDWARE_ID}${NC} (auto-generated)${NC}\n"
         log_success
-        log_step "Credential Persistence"
-        printf "${YELLOW}not configured${NC}\n"
+        printf "    ${DIM}↳ Info:${NC} Stored in ${BASE_DIR}/.hardware-id\n"
+
+        if [ -f "$BASE_DIR/auth.enc" ]; then
+            log_step "Credential Persistence"
+            printf "${GREEN}enabled (auth.enc file found)${NC}\n"
+            RUN_AUTO_AUTH="FALSE"
+        else
+            log_step "Credential Persistence"
+            printf "${YELLOW}not configured${NC}\n"
+        fi
     fi
 }
 
