@@ -42,12 +42,12 @@ generate_hardware_id() {
         SALT="hytale-server-container-hardware-id-v1"
         HASH=$(printf '%s-%s' "$CONTAINER_NAME" "$SALT" | sha256sum | cut -d' ' -f1)
         # RFC 4122 UUID v4: force version=4 at index 12, variant nibble at index 16
-        printf '%s-%s-%s-%s-%s\n' \
-            "${HASH:0:8}" \
-            "${HASH:8:4}" \
-            "4${HASH:13:3}" \
-            "8${HASH:17:3}" \
-            "${HASH:20:12}" > "$HARDWARE_ID_FILE"
+        UUID_PART1=$(printf '%s' "$HASH" | cut -c1-8)
+        UUID_PART2=$(printf '%s' "$HASH" | cut -c9-12)
+        UUID_PART3="4$(printf '%s' "$HASH" | cut -c14-16)"
+        UUID_PART4="8$(printf '%s' "$HASH" | cut -c18-20)"
+        UUID_PART5=$(printf '%s' "$HASH" | cut -c21-32)
+        printf '%s-%s-%s-%s-%s\n' "$UUID_PART1" "$UUID_PART2" "$UUID_PART3" "$UUID_PART4" "$UUID_PART5" > "$HARDWARE_ID_FILE"
     fi
 
     HARDWARE_ID="$(cat "$HARDWARE_ID_FILE")"
@@ -90,6 +90,7 @@ start_auth_monitor() {
     (
         sleep 5
 
+        AUTH_SELECT_PROFILE="${AUTH_SELECT_PROFILE:-0}"
         LOG_FILE=""
         for i in $(seq 1 30); do
             for f in /home/container/Server/logs/*_server.log; do
