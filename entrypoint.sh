@@ -20,7 +20,7 @@ fi
 . "$SCRIPTS_PATH/utils.sh"
 
 # Check if running old folder structure and migrate if necessary
-sh "$SCRIPTS_PATH/checks/migrate_check.sh"
+sh "$SCRIPTS_PATH/hytale/hytale_legacy_backup.sh"
 
 # --- Initialization Phase ---
 # CRITICAL ORDER: Binary handler must run BEFORE config management
