@@ -3,7 +3,7 @@
 
 # Copyright (C) 2026 Daniel Freudenberg
 #
-# This file is part of hytale-server-container.
+# This file is part of github.com/deinfreu/hytale-server-container.
 #
 # hytale-server-container is free software: you can redistribute it
 # and/or modify it under the terms of the GNU General Public License
