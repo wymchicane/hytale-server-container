@@ -37,10 +37,17 @@ generate_hardware_id() {
     HARDWARE_ID_FILE="$BASE_DIR/.hardware-id"
 
     if [ ! -f "$HARDWARE_ID_FILE" ]; then
-        # Generate deterministic ID from container name + static salt
+        # Generate deterministic UUID from container name + static salt
         CONTAINER_NAME="${HOSTNAME:-hytale-server}"
         SALT="hytale-server-container-hardware-id-v1"
-        printf '%s-%s' "$CONTAINER_NAME" "$SALT" | sha256sum | cut -d' ' -f1 > "$HARDWARE_ID_FILE"
+        HASH=$(printf '%s-%s' "$CONTAINER_NAME" "$SALT" | sha256sum | cut -d' ' -f1)
+        # RFC 4122 UUID v4: force version=4 at index 12, variant nibble at index 16
+        printf '%s-%s-%s-%s-%s\n' \
+            "${HASH:0:8}" \
+            "${HASH:8:4}" \
+            "4${HASH:13:3}" \
+            "8${HASH:17:3}" \
+            "${HASH:20:12}" > "$HARDWARE_ID_FILE"
     fi
 
     HARDWARE_ID="$(cat "$HARDWARE_ID_FILE")"
@@ -57,7 +64,7 @@ check_hardware_id() {
         if [ -f "$BASE_DIR/auth.enc" ]; then
             log_step "Credential Persistence"
             printf "${GREEN}enabled (auth.enc file found)${NC}\n"
-            RUN_AUTO_AUTH="FALSE"
+            RUN_AUTO_AUTH="FALSE"WWW
         else
             log_step "Credential Persistence"
             printf "${YELLOW}not configured${NC}\n"
