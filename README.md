@@ -54,6 +54,32 @@ services:
 
 For additional deployment configurations, see our [examples](https://github.com/deinfreu/hytale-server-container/tree/main/examples) or refer to the [installation](https://hytale-server-container.com/installation/container_installation/?utm_source=github&utm_medium=social&utm_campaign=github_readme) and [OS-specific](https://hytale-server-container.com/guide/?utm_source=github&utm_medium=social&utm_campaign=github_readme) guides.
 
+## File structure
+
+Once the initial run is complete, your server-files directory will be populated with the following structure:
+
+```
+data/
+├── Server/
+│   ├── .cache/
+│   ├── Licenses/
+│   ├── logs/
+│   ├── mods/
+│   ├── telemetry/
+│   ├── universe/
+│   ├── auth.enc
+│   ├── auth.key
+│   ├── bans.json
+│   ├── config.json
+│   ├── config.json.bak
+│   ├── HytaleServer.aot.config
+│   ├── HytaleServer.jar
+│   ├── permissions.json
+│   └── whitelist.json
+├── .hytale-downloader-credentials.json
+└── Assets.zip
+```
+
 ## Support & Resources
 
 **Support:** 

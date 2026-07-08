@@ -11,7 +11,7 @@ Hytale Server Container &copy; 2025-{{ "now" | date: "%Y" }} by [Deinfreu](https
 
 ### License
 
-Hytale Server Container is distributed under the [APACHE-2.0](https://github.com/deinfreu/hytale-server-container/blob/main/LICENSE) license.
+Hytale Server Container is distributed under the [GPL-3.0](https://github.com/deinfreu/hytale-server-container/blob/main/LICENSE) license.
 
 ### Contributing
 

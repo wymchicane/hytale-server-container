@@ -18,6 +18,8 @@ A lightweight, user-friendly Docker container for hosting Hytale servers. With a
 
 ---
 
+![Terminal demo](./assets/videos/terminal.gif)
+
 ## Key Features
 
 * **Lightweight & Efficient:** Optimized images starting at just **61.7MB**, ensuring fast pulls and minimal resource consumption.

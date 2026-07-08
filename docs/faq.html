@@ -22,18 +22,20 @@ Installation
     </h4>
   </summary>
   <p>
-    This happens because the container does not have access to the host’s Linux
-    hardware ID. Without it, the server generates a new identity on each
-    restart.
+    This happens because the container does not have access to a persistent host machine ID. Without it, the server generates a new identity on each restart.
   </p>
 
-  <p>Mount the machine-id volume:</p>
-
-  <pre><code>/etc/machine-id:/etc/machine-id:ro</code></pre>
-
-  <p>Docker run:</p>
-
+  <p><strong>Docker run:</strong></p>
   <pre><code>-v "/etc/machine-id:/etc/machine-id:ro"</code></pre>
+
+  <p><strong>Docker Compose:</strong></p>
+  <pre><code>volumes:
+  - /etc/machine-id:/etc/machine-id:ro</code></pre>
+
+  <p><strong>WSL2, Unraid, Raspberry Pi:</strong> The host's machine-id may not persist reliably. Create a local file instead:</p>
+  <pre><code>volumes:
+  - ./machine-id:/etc/machine-id:ro</code></pre>
+  <p>Generate it once with: <code>cat /etc/machine-id > ./machine-id</code> (Linux) or <code>[guid]::NewGuid().ToString("N") | Out-File -Encoding ascii -NoNewline .\machine-id</code> (PowerShell).</p>
 </details>
 
 <details>
@@ -46,16 +48,6 @@ Installation
   </p>
 
   <pre><code>sudo chown -R 1000:1000 data</code></pre>
-</details>
-
-<details>
-  <summary>
-    <h4 style="display: inline-block">I can't run the server on ARM64</h4>
-  </summary>
-  <p>
-    The <code>hytale-downloader</code> CLI tool does not currently support
-    ARM64.
-  </p>
 </details>
 
 <hr />
@@ -108,13 +100,6 @@ Installation
       How can I give myself permissions in-game?
     </h4>
   </summary>
-
-  <blockquote class="warning">
-    <p>
-      Create a backup of your server files before performing an update to
-      prevent data loss.
-    </p>
-  </blockquote>
 
   <div class="note">
     <p>

@@ -1,21 +1,10 @@
-FROM ruby:3.2-alpine
+FROM ruby:3.3-slim
 
-# Install dependencies
-RUN apk add --no-cache \
-    build-base \
-    gcc \
-    cmake \
-    git \
-    tzdata
-
-# Set working directory
+# Set working directory to the docs site
 WORKDIR /site
 
-# Copy Gemfile
-COPY Gemfile* ./
-
-# Install gems
-RUN bundle install
+# Copy pre-built gems from host's vendor/bundle into the image
+COPY docs/vendor/bundle /usr/local/bundle/ruby/3.3.0
 
 # Expose Jekyll default port
 EXPOSE 4000

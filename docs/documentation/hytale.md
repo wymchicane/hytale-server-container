@@ -7,36 +7,57 @@ nav_order: 1
 
 # Hytale specific settings
 
-Here you can find the hytale specific settings
+Here you can find the Hytale-specific settings and tools.
 
 ---
 
-## Hytale downloader CLI tool
+## Hytale Downloader CLI Tool
 
-You can interface with this tool by entering your docker terminal. More information [here](../installation/container_installation.md).
+The container includes a built-in `hytale-downloader` tool for managing server binaries and updates. You run it directly inside the running container's terminal.
 
-You can use the following commands:
+### Accessing the Container Terminal
 
-| Command                                      | Description                                      |
-|---------------------------------------------|--------------------------------------------------|
-| hytale-downloader                            | Download the latest release                      |
-| hytale-downloader -print-version             | Show game version without downloading            |
-| hytale-downloader -version                   | Show hytale-downloader version                   |
-| hytale-downloader -check-update              | Check for hytale-downloader updates               |
-| hytale-downloader -patchline pre-release     | Download from pre-release channel                |
-| hytale-downloader -skip-update-check         | Skip automatic update check                      |
+**Docker Run:**
 
-## Updating Hytale Server
+```bash
+docker exec -it <container_name> /bin/sh
+```
 
-If you want to automatically update Hytale to the newest version:
+Once inside, you can type commands directly.
 
-1. Enter your container terminal
-2. Run `hytale-downloader` to download the latest version
-3. Restart the container with `docker compose restart`
-4. The server will automatically detect and extract the update
+### Available Commands
 
-The update process only replaces server binaries - your configs, worlds, and mods are preserved.
+| Command | Description |
+| --- | --- |
+| `hytale-downloader` | Download the latest release |
+| `hytale-downloader -print-version` | Show game version without downloading |
+| `hytale-downloader -version` | Show hytale-downloader version |
+| `hytale-downloader -check-update` | Check for hytale-downloader updates |
+| `hytale-downloader -patchline pre-release` | Download from the pre-release channel |
+| `hytale-downloader -skip-update-check` | Skip automatic update check |
 
-## Hytale server variables
+### Example Usage
 
-Check the variables in the [docker technical page](./docker.md) which you can use to set server settings 
+```sh
+/ # hytale-downloader -print-version
+Hytale version: 0.120.0
+
+/ # hytale-downloader
+[INFO] Downloading latest release...
+[INFO] Update complete. Restart the container to apply.
+```
+
+## Updating the Hytale Server
+
+To update your server to the latest version:
+
+1. Open the container terminal as shown above.
+2. Type `hytale-downloader` and press Enter.
+3. Wait for the download to complete.
+4. Restart the container (`docker compose restart` or `docker restart hytale-server`).
+
+The update replaces only server binaries — your configs, worlds, and mods are preserved.
+
+## Hytale Server Variables
+
+For environment variables that configure server behavior (player limits, game mode, authentication, etc.), see the [Docker Configuration Reference](./docker.md).
