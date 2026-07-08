@@ -5,10 +5,12 @@ nav_order: 1
 description: "Hytale server container Documentation Home"
 ---
 
-# Hytale Docker Server
+# Hytale server container
 {: .fs-9 }
 
-A high-performance Docker container for hosting Hytale servers. Features automated binary management, cross-platform support, and built-in diagnostic tools.
+deinfreu/hytale-server-container
+
+A lightweight, user-friendly Docker container for hosting Hytale servers. With a tiny 61.7MB footprint, ARM64 support, secure non-root execution, and in-game updates, we prioritize stability and performance so you can focus on managing your world.
 {: .fs-6 .fw-400 }
 
 [Getting started](/installation/requirements.md){: .btn .btn-primary .fs-5 .mb-4 .mb-md-0 .mr-2 }
@@ -18,12 +20,13 @@ A high-performance Docker container for hosting Hytale servers. Features automat
 
 ## Key Features
 
-* **Fast server startup:** Startup your server in 7 seconds with `CACHE=TRUE`
-* **Easy Deployment:** Go to the [requirements](https://hytale-server-container.com/installation/) pages to get started
-* **Smart CLI:** Includes the `hytale-downloader` tool to manage server binaries and check for updates automatically. You can just use "hytale-downloader" in the terminal to access it.
-* **Multi-Arch Support:** Optimized for `x86_64` (`ARM64` coming soon [more info](https://x.com/slikey/status/2010869532454510999)).
-* **Diagnostic Suite:** Built-in debug mode to audit your network and security settings automatically.
-* **Slim Images:** Optimized, lightweight image variants for production environments.
+* **Lightweight & Efficient:** Optimized images starting at just **61.7MB**, ensuring fast pulls and minimal resource consumption.
+* **Multi-Arch Support:** Full native support for both `x86_64` and `ARM64` architectures.
+* **Smart CLI:** Includes the `hytale-downloader` tool, allowing you to manage server binaries and check for updates directly from your terminal.
+* **Secure by Design:** Engineered for secure, non-root execution by default.
+* **Diagnostic Suite:** Built-in debug mode to automatically audit your network and security settings.
+* **Seamless Updates:** Integrated tools designed for effortless, in-game server updates.
+* **Community-Driven:** Actively maintained by a community of 10+ contributors, prioritizing stability and performance.
 
 ---
 
