@@ -1,4 +1,4 @@
-name: "Release: Tag ➔ Docker Hub & GitHub"
+name: "Build release"
 
 # Description: Automated CI/CD pipeline triggered by clean version tags (*.*.*).
 # 1. Builds and publishes multi-flavor Docker images simultaneously to both GHCR and Docker Hub.

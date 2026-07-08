@@ -1,4 +1,4 @@
-name: "Deploy Documentation Site"
+name: "Deploy github page"
 
 # Description: Compiles and publishes the project documentation to GitHub Pages.
 # 1. Triggers exclusively when changes are made inside the 'docs/' directory.

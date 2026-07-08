@@ -1,4 +1,4 @@
-name: "Publish Branch Build"
+name: "Build branch"
 
 # Description: Dynamically handles image compilation for rolling branches.
 # 1. Triggers on changes pushed to either 'main' or 'staging'.
