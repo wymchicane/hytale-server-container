@@ -11,28 +11,6 @@ This page covers all approaches for running the documentation site and building 
 
 ---
 
-## Docker-based Development
-
-A pre-configured Docker environment is provided for quick, dependency-free local testing.
-
-### Step 1: Navigate to the Dev Folder
-
-```bash
-cd docs/dev
-```
-
-### Step 2: Run with Docker Compose
-
-```bash
-docker compose up
-```
-
-The site will be available at **http://localhost:4000/hytale-server-container/**.
-
-{: .note }
-> The `docs/dev/` folder is excluded from GitHub Pages deployment and git tracking. It is provided for local testing only.
-
----
 
 ## Building the Server Container
 
@@ -97,7 +75,7 @@ docker compose up --build
 
 ---
 
-## Running the Docs Locally (Native)
+## Running the Documentation Site Locally
 
 Run the Jekyll docs site on your machine using Ruby and Bundler.
 
