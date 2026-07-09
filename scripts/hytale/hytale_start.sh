@@ -97,9 +97,9 @@ run_server() {
     RUNTIME_CMD="${RUNTIME:-}"
 
     if [ -n "$RUNTIME_CMD" ]; then
-        $RUNTIME sh -c "( tail -f \"$AUTH_PIPE\" 2>/dev/null || true ) | $java_cmd 2>&1 | stdbuf -oL -eL sed 's/\r$//' | stdbuf -oL -eL tee \"$AUTH_OUTPUT_LOG\""
+        $RUNTIME sh -c "( tail -f \"$AUTH_PIPE\" 2>/dev/null & cat ) | $java_cmd 2>&1 | stdbuf -oL -eL sed 's/\r$//' | stdbuf -oL -eL tee \"$AUTH_OUTPUT_LOG\""
     else
-        ( tail -f "$AUTH_PIPE" 2>/dev/null || true ) | $java_cmd 2>&1 | stdbuf -oL -eL sed 's/\r$//' | stdbuf -oL -eL tee "$AUTH_OUTPUT_LOG"
+        ( tail -f "$AUTH_PIPE" 2>/dev/null & cat ) | $java_cmd 2>&1 | stdbuf -oL -eL sed 's/\r$//' | stdbuf -oL -eL tee "$AUTH_OUTPUT_LOG"
     fi
 }
 
