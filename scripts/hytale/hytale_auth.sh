@@ -88,11 +88,13 @@ check_hardware_id() {
 
 start_auth_monitor() {
     (
-        sleep 5
+        # Increased initial wait for ARM64/QEMU emulation overhead
+        sleep 10
 
         AUTH_SELECT_PROFILE="${AUTH_SELECT_PROFILE:-0}"
         LOG_FILE=""
-        for i in $(seq 1 30); do
+        # Extended retry window for ARM64/QEMU (60 × 2s = 120s vs old 30 × 2s = 60s)
+        for i in $(seq 1 60); do
             for f in /home/container/Server/logs/*_server.log; do
                 if [ -f "$f" ]; then
                     LOG_FILE="$f"
@@ -100,6 +102,16 @@ start_auth_monitor() {
                 fi
             done
             sleep 2
+        done
+
+        # Wait for FIFO pipe to be consumed (hytale_start.sh opens it) before monitoring
+        _fifo_ready=0
+        while [ $_fifo_ready -eq 0 ]; do
+            if [ -p "$AUTH_PIPE" ] && [ -f "${LOG_FILE:-/dev/null}" ]; then
+                _fifo_ready=1
+            else
+                sleep 1
+            fi
         done
 
         if [ -n "$LOG_FILE" ] && [ -f "$LOG_FILE" ]; then
