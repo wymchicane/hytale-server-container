@@ -24,11 +24,26 @@
 # ==========================================
 
 init_auth_pipes() {
-    AUTH_PIPE="/tmp/hytale-console.in"
-    AUTH_OUTPUT_LOG="/tmp/hytale-server.log"
+    # A dedicated, non-world-writable directory (unlike /tmp itself) so the FIFO
+    # isn't subject to fs.protected_fifos: that kernel check blocks opening a FIFO
+    # for writing across UIDs when its parent dir is sticky + world-writable,
+    # which would break either the root auth monitor's writes or java's own
+    # read-write open of AUTH_PIPE (java runs as the unprivileged container user).
+    AUTH_DIR="/tmp/hytale-auth"
+    AUTH_PIPE="$AUTH_DIR/console.in"
+    AUTH_OUTPUT_LOG="$AUTH_DIR/server.log"
+
+    mkdir -p "$AUTH_DIR"
+    chmod 755 "$AUTH_DIR"
     rm -f "$AUTH_PIPE" "$AUTH_OUTPUT_LOG"
     mkfifo "$AUTH_PIPE"
+    chmod 666 "$AUTH_PIPE"
     touch "$AUTH_OUTPUT_LOG"
+
+    if [ "$(id -u)" = "0" ]; then
+        chown "${UID:-1000}:${GID:-1000}" "$AUTH_OUTPUT_LOG" 2>/dev/null || true
+    fi
+
     export AUTH_PIPE
     export AUTH_OUTPUT_LOG
 }
@@ -64,7 +79,7 @@ check_hardware_id() {
         if [ -f "$BASE_DIR/Server/auth.enc" ]; then
             log_step "Credential Persistence"
             printf "${GREEN}enabled (auth.enc file found)${NC}\n"
-            RUN_AUTO_AUTH="FALSE"
+            AUTH_CREDENTIALS_PRESENT="TRUE"
         else
             log_step "Credential Persistence"
             printf "${YELLOW}not configured${NC}\n"
@@ -78,7 +93,7 @@ check_hardware_id() {
         if [ -f "$BASE_DIR/Server/auth.enc" ]; then
             log_step "Credential Persistence"
             printf "${GREEN}enabled (auth.enc file found)${NC}\n"
-            RUN_AUTO_AUTH="FALSE"
+            AUTH_CREDENTIALS_PRESENT="TRUE"
         else
             log_step "Credential Persistence"
             printf "${YELLOW}not configured${NC}\n"
@@ -87,53 +102,44 @@ check_hardware_id() {
 }
 
 start_auth_monitor() {
+    trap '' HUP
     (
-        # Increased initial wait for ARM64/QEMU emulation overhead
-        sleep 10
-
         AUTH_SELECT_PROFILE="${AUTH_SELECT_PROFILE:-0}"
-        LOG_FILE=""
-        # Extended retry window for ARM64/QEMU (60 × 2s = 120s vs old 30 × 2s = 60s)
-        for i in $(seq 1 60); do
-            for f in /home/container/Server/logs/*_server.log; do
-                if [ -f "$f" ]; then
-                    LOG_FILE="$f"
-                    break 2
-                fi
-            done
-            sleep 2
-        done
 
-        # Wait for FIFO pipe to be consumed (hytale_start.sh opens it) before monitoring
-        _fifo_ready=0
-        while [ $_fifo_ready -eq 0 ]; do
-            if [ -p "$AUTH_PIPE" ] && [ -f "${LOG_FILE:-/dev/null}" ]; then
-                _fifo_ready=1
-            else
-                sleep 1
-            fi
-        done
+        if [ -f "$AUTH_OUTPUT_LOG" ]; then
+            login_sent=0
+            tail -F "$AUTH_OUTPUT_LOG" 2>/dev/null | while IFS= read -r line || [ -n "$line" ]; do
+                if [ "$login_sent" -eq 0 ]; then
+                    send_login=0
 
-        if [ -n "$LOG_FILE" ] && [ -f "$LOG_FILE" ]; then
-            tail -F "$LOG_FILE" 2>/dev/null | while IFS= read -r line || [ -n "$line" ]; do
-                case "$line" in
-                    *"Hytale Server Booted!"*)
+                    case "$line" in
+                        *"$HYTALE_AUTH_READY_ALT_PATTERN"*) [ -n "$HYTALE_AUTH_READY_ALT_PATTERN" ] && send_login=1 ;;
+                    esac
+
+                    if [ "$AUTH_CREDENTIALS_PRESENT" != "TRUE" ]; then
+                        case "$line" in
+                            *"$HYTALE_AUTH_READY_PATTERN"*) [ -n "$HYTALE_AUTH_READY_PATTERN" ] && send_login=1 ;;
+                        esac
+                    fi
+
+                    if [ "$send_login" -eq 1 ]; then
                         sleep 2
-                        echo "/auth login device" > "$AUTH_PIPE" 2>/dev/null || true
-                        ;;
-                esac
+                        { echo "/auth login device" > "$AUTH_PIPE"; } 2>/dev/null || true
+                        login_sent=1
+                    fi
+                fi
 
                 case "$line" in
                     *"Multiple profiles available"*)
                         sleep 1
-                        echo "/auth select $AUTH_SELECT_PROFILE" > "$AUTH_PIPE" 2>/dev/null || true
+                        { echo "/auth select $AUTH_SELECT_PROFILE" > "$AUTH_PIPE"; } 2>/dev/null || true
                         ;;
                 esac
 
                 case "$line" in
                     *"Authentication successful!"*|*"Server is already authenticated."*)
                         sleep 1
-                        echo "/auth persistence Encrypted" > "$AUTH_PIPE" 2>/dev/null || true
+                        { echo "/auth persistence Encrypted" > "$AUTH_PIPE"; } 2>/dev/null || true
                         break
                         ;;
                 esac
@@ -141,6 +147,7 @@ start_auth_monitor() {
         fi
     ) &
     AUTH_PID=$!
+    trap - HUP
 }
 
 # ==========================================
@@ -150,6 +157,7 @@ start_auth_monitor() {
 log_section "Authentication Management"
 
 RUN_AUTO_AUTH="TRUE"
+AUTH_CREDENTIALS_PRESENT="FALSE"
 
 init_auth_pipes
 check_hardware_id
