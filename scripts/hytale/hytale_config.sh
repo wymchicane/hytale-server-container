@@ -23,7 +23,10 @@ set -eu
 . "$SCRIPTS_PATH/utils.sh"
 
 # Constants
-readonly CONFIG_FILE="${BASE_DIR:-/home/container}/config.json"
+# The server runs with CWD=$BASE_DIR/Server (see hytale_start.sh: `cd Server`),
+# so it reads/writes Server/config.json — NOT $BASE_DIR/config.json. Manage the
+# file the server actually loads, otherwise env overrides silently never apply.
+readonly CONFIG_FILE="${BASE_DIR:-/home/container}/Server/config.json"
 readonly CONFIG_BACKUP_SUFFIX=".invalid.bak"
 readonly CONFIG_TMP_SUFFIX=".tmp"
 
