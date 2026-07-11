@@ -7,9 +7,8 @@ name: "Build branch"
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
-      - staging
     paths-ignore:
       - '.github/**'
       - 'docs/**'
@@ -20,21 +19,6 @@ on:
       - 'DOCKERHUB.md'
       - '.clinerules'
       - 'LICENSE'
-  pull_request:
-    branches:
-      - main
-      - staging
-    paths-ignore:
-      - '.github/**'
-      - 'docs/**'
-      - 'assets/**'
-      - 'examples/**'
-      - 'SECURITY.md'
-      - 'README.md'
-      - 'DOCKERHUB.md'
-      - '.clinerules'
-      - 'LICENSE'
-  workflow_dispatch:
 
 permissions:
   contents: read
